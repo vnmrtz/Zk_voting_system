@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.1.1",
+    "@openzeppelin/hardhat-upgrades": "^1.20.0",
+    "ethers": "^5.7.0",
+    "hardhat": "^2.10.2"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5"
+  }
+}
