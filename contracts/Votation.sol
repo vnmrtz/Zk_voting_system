@@ -10,44 +10,41 @@ interface IVerifier {
 }
 
 contract Votation is Ownable, MerkleTree {
-
-    uint32 private constant MERKLE_LEVELS = 15; 
-    uint private constant MIN_DELAY = 2 hours;
+    uint32 private constant MERKLE_LEVELS = 15;
+    uint256 private constant MIN_DELAY = 2 hours;
     uint256 public id;
     string public name;
     string public description;
-    string[] public choices; 
-    uint256 public choiceNumber; 
+    string[] public choices;
+    uint256 public choiceNumber;
 
     address public verifier;
-	
-    mapping(uint256 => uint256) votes; 
+
+    mapping(uint256 => uint256) votes;
     mapping(bytes32 => bool) public nullifierHashes;
     mapping(bytes32 => bool) public commitments;
-    mapping (address => bool) whiteList;
-    
-    uint public startDate;
-    uint public endDate;
-  
-    
-    modifier onlyWhitelist(){
-        require(whiteList[msg.sender], 'Not authorized');
+    mapping(address => bool) whiteList;
+
+    uint256 public startDate;
+    uint256 public endDate;
+
+    modifier onlyWhitelist() {
+        require(whiteList[msg.sender], "Not authorized");
         _;
     }
-    
+
     constructor(
         uint256 _id,
         string memory _name,
         string memory _description,
         string[] memory _choices,
         address[] memory _whitelist,
-        uint _startDate,
-        uint _endDate,
+        uint256 _startDate,
+        uint256 _endDate,
         address _admin,
         address _verifier,
-        address _hasher
-    ) 
-    MerkleTree(MERKLE_LEVELS, _hasher) {
+        IHasher _hasher
+    ) MerkleTree(MERKLE_LEVELS, _hasher) {
         require(_startDate + MIN_DELAY < _endDate);
         id = _id;
         name = _name;
@@ -58,14 +55,14 @@ contract Votation is Ownable, MerkleTree {
         endDate = _endDate;
         verifier = _verifier;
 
-        uint length = _whitelist.length;
-        for (uint i = 0; i < length; i++){
+        uint256 length = _whitelist.length;
+        for (uint256 i = 0; i < length; i++) {
             whiteList[_whitelist[i]] = true;
         }
 
-        if ( _admin != address(0)){
+        if (_admin != address(0)) {
             transferOwnership(_admin);
-        }        
+        }
     }
 
     event SignUp(
@@ -73,29 +70,33 @@ contract Votation is Ownable, MerkleTree {
         uint32 leafIndex,
         uint256 timestamp
     );
-    event Vote(
-        address voter,
-        bytes32 nullifierHash
-    );   
-     
+    event Vote(address voter, bytes32 nullifierHash);
+
     function addMember(address _user) public onlyOwner {
         whiteList[_user] = true;
     }
-        
-    function results(uint _choice) public view returns (uint256) {
+
+    function results(uint256 _choice) public view returns (uint256) {
         return votes[_choice];
     }
-    
-    function hasEnded() public view returns (bool){
+
+    function hasEnded() public view returns (bool) {
         return block.timestamp > endDate;
     }
 
-    function hasStarted() public view returns (bool){
+    function hasStarted() public view returns (bool) {
         return block.timestamp > startDate;
     }
 
-    function signUp(bytes32 _commitment) external onlyWhitelist returns (uint index){
-        require(!commitments[_commitment], "The commitment has been submitted!!");
+    function signUp(bytes32 _commitment)
+        external
+        onlyWhitelist
+        returns (uint256 index)
+    {
+        require(
+            !commitments[_commitment],
+            "The commitment has been submitted!!"
+        );
         require(block.timestamp < startDate, "Votation has already started!!");
 
         uint32 insertedIndex = _insert(_commitment);
@@ -108,9 +109,12 @@ contract Votation is Ownable, MerkleTree {
     function vote(
         bytes calldata _proof,
         bytes32 _nullifierHash,
-        uint _choice
+        uint256 _choice
     ) external {
-        require(block.timestamp < endDate && block.timestamp >= startDate, "Votation has not started yet");
+        require(
+            block.timestamp < endDate && block.timestamp >= startDate,
+            "Votation has not started yet"
+        );
         require(_choice >= 1 && _choice <= choices.length);
         require(
             !nullifierHashes[_nullifierHash],
@@ -119,10 +123,7 @@ contract Votation is Ownable, MerkleTree {
         require(
             IVerifier(verifier).verifyProof(
                 _proof,
-                [
-                    uint256(latestRoot),
-                    uint256(_nullifierHash)
-                ]
+                [uint256(latestRoot), uint256(_nullifierHash)]
             ),
             "Invalid withdraw proof"
         );

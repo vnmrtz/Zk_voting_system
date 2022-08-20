@@ -1,16 +1,19 @@
 pragma solidity ^0.8.0;
 
 interface IHasher {
-    function MiMCSponge(uint256 in_xL, uint256 in_xR)
-        external
-        returns (uint256 xL, uint256 xR);
+    function MiMCSponge(
+        uint256 in_xL,
+        uint256 in_xR,
+        uint256 k
+    ) external pure returns (uint256 xL, uint256 xR);
 }
 
 contract MerkleTree {
-    address hasher;
+    IHasher public immutable hasher;
     uint256 public constant FIELD_SIZE =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
-    uint256 public constant ZERO_VALUE = 11111111111111111111111111111111111111111111111111111111111111111111111111111;
+    uint256 public constant ZERO_VALUE =
+        11111111111111111111111111111111111111111111111111111111111111111111111111111;
 
     uint32 public levels;
 
@@ -19,34 +22,35 @@ contract MerkleTree {
     bytes32[] public filledSubtrees;
     bytes32[] public zeros;
     uint32 public nextIndex = 0;
-    bytes32 public latestRoot; 
+    bytes32 public latestRoot;
 
-    constructor(uint32 _treeLevels, address _hasher) {
+    constructor(uint32 _treeLevels, IHasher _hasher) {
         require(_treeLevels > 0, "_treeLevels should be greater than zero");
         require(_treeLevels < 32, "_treeLevels should be less than 32");
         levels = _treeLevels;
+        hasher = _hasher;
 
         bytes32 currentZero = bytes32(ZERO_VALUE);
         zeros.push(currentZero);
         filledSubtrees.push(currentZero);
 
         for (uint32 i = 1; i < levels; i++) {
-            currentZero = hashLeftRight(currentZero, currentZero);
+            currentZero = hashLeftRight(hasher, currentZero, currentZero);
             zeros.push(currentZero);
             filledSubtrees.push(currentZero);
         }
 
-        latestRoot = hashLeftRight(currentZero, currentZero);
+        latestRoot = hashLeftRight(hasher, currentZero, currentZero);
     }
 
     /**
     @dev Hash 2 tree leaves, returns MiMC(_left, _right)
   */
-    function hashLeftRight(bytes32 _left, bytes32 _right)
-        public
-        
-        returns (bytes32)
-    {
+    function hashLeftRight(
+        IHasher _hasher,
+        bytes32 _left,
+        bytes32 _right
+    ) public pure returns (bytes32) {
         require(
             uint256(_left) < FIELD_SIZE,
             "_left should be inside the field"
@@ -57,9 +61,9 @@ contract MerkleTree {
         );
         uint256 R = uint256(_left);
         uint256 C = 0;
-        (R, C) = IHasher(hasher).MiMCSponge(R, C);
+        (R, C) = _hasher.MiMCSponge(R, C, 0);
         R = addmod(R, uint256(_right), FIELD_SIZE);
-        (R, C) = IHasher(hasher).MiMCSponge(R, C);
+        (R, C) = _hasher.MiMCSponge(R, C, 0);
         return bytes32(R);
     }
 
@@ -85,7 +89,7 @@ contract MerkleTree {
                 right = currentLevelHash;
             }
 
-            currentLevelHash = hashLeftRight(left, right);
+            currentLevelHash = hashLeftRight(hasher, left, right);
 
             currentIndex /= 2;
         }
@@ -99,7 +103,7 @@ contract MerkleTree {
         if (_root == 0) {
             return false;
         }
-        if (_root == latestRoot){
+        if (_root == latestRoot) {
             return true;
         }
         return false;
