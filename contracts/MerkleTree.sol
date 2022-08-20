@@ -1,5 +1,5 @@
 pragma solidity ^0.8.0;
-
+import "@openzeppelin/contracts/utils/Strings.sol";
 interface IHasher {
     function MiMCSponge(
         uint256 in_xL,
@@ -13,7 +13,7 @@ contract MerkleTree {
     uint256 public constant FIELD_SIZE =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
     uint256 public constant ZERO_VALUE =
-        11111111111111111111111111111111111111111111111111111111111111111111111111111;
+        21663839004416932945382355908790599225266501822907911457504978515578255421292;
 
     uint32 public levels;
 
@@ -53,7 +53,7 @@ contract MerkleTree {
     ) public pure returns (bytes32) {
         require(
             uint256(_left) < FIELD_SIZE,
-            "_left should be inside the field"
+           Strings.toString(uint256(_left))
         );
         require(
             uint256(_right) < FIELD_SIZE,
