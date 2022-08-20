@@ -1,17 +1,17 @@
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MerkleTree.sol";
 
-contract IVerifier {
+interface IVerifier {
     function verifyProof(bytes memory _proof, uint256[2] memory _input)
-        public
+        external
         returns (bool);
 }
 
 contract Votation is Ownable, MerkleTree {
 
-    uint private constant MERKLE_LEVELS = 15; 
+    uint32 private constant MERKLE_LEVELS = 15; 
     uint private constant MIN_DELAY = 2 hours;
     uint256 public id;
     string public name;
@@ -37,16 +37,17 @@ contract Votation is Ownable, MerkleTree {
     
     constructor(
         uint256 _id,
-        string _name,
-        string _description,
-        string[] _choices,
-        address[] _whitelist,
+        string memory _name,
+        string memory _description,
+        string[] memory _choices,
+        address[] memory _whitelist,
         uint _startDate,
         uint _endDate,
         address _admin,
-        address _verifier
+        address _verifier,
+        address _hasher
     ) 
-    MerkleTree(MERKLE_LEVELS) {
+    MerkleTree(MERKLE_LEVELS, _hasher) {
         require(_startDate + MIN_DELAY < _endDate);
         id = _id;
         name = _name;
@@ -56,6 +57,11 @@ contract Votation is Ownable, MerkleTree {
         startDate = _startDate;
         endDate = _endDate;
         verifier = _verifier;
+
+        uint length = _whitelist.length;
+        for (uint i = 0; i < length; i++){
+            whiteList[_whitelist[i]] = true;
+        }
 
         if ( _admin != address(0)){
             transferOwnership(_admin);
@@ -111,7 +117,7 @@ contract Votation is Ownable, MerkleTree {
             "Your vote has already been submitted"
         );
         require(
-            verifier.verifyProof(
+            IVerifier(verifier).verifyProof(
                 _proof,
                 [
                     uint256(latestRoot),

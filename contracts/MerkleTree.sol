@@ -1,13 +1,13 @@
 pragma solidity ^0.8.0;
 
-library Hasher {
+interface IHasher {
     function MiMCSponge(uint256 in_xL, uint256 in_xR)
-        public
-        pure
+        external
         returns (uint256 xL, uint256 xR);
 }
 
 contract MerkleTree {
+    address hasher;
     uint256 public constant FIELD_SIZE =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
     uint256 public constant ZERO_VALUE = 11111111111111111111111111111111111111111111111111111111111111111111111111111;
@@ -21,7 +21,7 @@ contract MerkleTree {
     uint32 public nextIndex = 0;
     bytes32 public latestRoot; 
 
-    constructor(uint32 _treeLevels) public {
+    constructor(uint32 _treeLevels, address _hasher) {
         require(_treeLevels > 0, "_treeLevels should be greater than zero");
         require(_treeLevels < 32, "_treeLevels should be less than 32");
         levels = _treeLevels;
@@ -44,7 +44,7 @@ contract MerkleTree {
   */
     function hashLeftRight(bytes32 _left, bytes32 _right)
         public
-        pure
+        
         returns (bytes32)
     {
         require(
@@ -57,9 +57,9 @@ contract MerkleTree {
         );
         uint256 R = uint256(_left);
         uint256 C = 0;
-        (R, C) = Hasher.MiMCSponge(R, C);
+        (R, C) = IHasher(hasher).MiMCSponge(R, C);
         R = addmod(R, uint256(_right), FIELD_SIZE);
-        (R, C) = Hasher.MiMCSponge(R, C);
+        (R, C) = IHasher(hasher).MiMCSponge(R, C);
         return bytes32(R);
     }
 
