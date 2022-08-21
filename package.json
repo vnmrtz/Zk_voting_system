@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
+    "big-integer": "^1.6.51",
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.2",
     "dotenv": "^16.0.1",
-    "ffjavascript": "^0.2.45"
+    "ffjavascript": "^0.2.45",
+    "snarkjs": "^0.4.24"
   }
 }

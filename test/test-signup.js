@@ -5,7 +5,6 @@ const fs = require("fs");
 const assert = require("assert");
 const snarkjs = require("snarkjs");
 const circomlib = require("circomlib");
-const bigInt = snarkjs.bigInt;
 const merkleTree = require("../lib/MerkleTree");
 const readline = require("readline-sync");
 const buildGroth16 = require("websnark/src/groth16");
@@ -23,33 +22,6 @@ function createDeposit(nullifier, secret) {
   deposit.nullifierHash = pedersenHash(deposit.nullifier);
   return deposit;
 }
-
-async function main() {
-  babyJub = await circomlib.buildBabyjub();
-  pedersenAlg = await circomlib.buildPedersenHash();
-  pedersenHash = (data) => babyJub.unpackPoint(pedersenAlg.hash(data))[0];
-  let nullifier = Buffer.from("ae", "utf-8");
-  let secret = Buffer.from("j", "utf-8");
-  const createdDeposit = createDeposit(nullifier, secret);
-  const [account, addr1] = await hre.ethers.getSigners();
-  console.log(account);
-  console.log(createdDeposit);
-  const VotationContract = await hre.ethers.getContractAt(
-    "Votation",
-    "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-    account
-  );
-  console.log(Array.from(createdDeposit.commitment.values()));
-  let index = await VotationContract.signUp(
-    Array.from(createdDeposit.commitment.values())
-  );
-  console.log(index);
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
 
 async function generateMerkleProof(contract, deposit) {
   // Get all deposit events from smart contract and assemble merkle tree from them
@@ -89,14 +61,7 @@ async function generateMerkleProof(contract, deposit) {
  * @param fee Relayer fee
  * @param refund Receive ether for exchanged tokens
  */
-async function generateProof(
-  contract,
-  deposit,
-  recipient,
-  relayer = 0,
-  fee = 0,
-  refund = 0
-) {
+async function generateProof(contract, deposit) {
   // Decode hex string and restore the deposit object
   // let buf = Buffer.from(note.slice(2), 'hex')
   // let deposit = createDeposit(bigInt.leBuff2int(buf.slice(0, 31)), bigInt.leBuff2int(buf.slice(31, 62)))
@@ -112,10 +77,6 @@ async function generateProof(
     // Public snark inputs
     root: root,
     nullifierHash: deposit.nullifierHash,
-    recipient: bigInt(recipient),
-    relayer: bigInt(relayer),
-    fee: bigInt(fee),
-    refund: bigInt(refund),
 
     // Private snark inputs
     nullifier: deposit.nullifier,
@@ -135,14 +96,34 @@ async function generateProof(
   const { proof } = websnarkUtils.toSolidityInput(proofData);
   console.timeEnd("Proof time");
 
-  const args = [
-    toHex(input.root),
-    toHex(input.nullifierHash),
-    toHex(input.recipient, 20),
-    toHex(input.relayer, 20),
-    toHex(input.fee),
-    toHex(input.refund),
-  ];
+  const args = [toHex(input.root), toHex(input.nullifierHash)];
 
   return { proof, args };
 }
+
+async function main() {
+  babyJub = await circomlib.buildBabyjub();
+  pedersenAlg = await circomlib.buildPedersenHash();
+  pedersenHash = (data) => babyJub.unpackPoint(pedersenAlg.hash(data))[0];
+  let nullifier = Buffer.from("ae", "utf-8");
+  let secret = Buffer.from("j", "utf-8");
+  const createdDeposit = createDeposit(nullifier, secret);
+  const [account, addr1] = await hre.ethers.getSigners();
+  console.log(account);
+  console.log(createdDeposit);
+  const VotationContract = await hre.ethers.getContractAt(
+    "Votation",
+    "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+    account
+  );
+  console.log(Array.from(createdDeposit.commitment.values()));
+  let index = await VotationContract.signUp(
+    Array.from(createdDeposit.commitment.values())
+  );
+  console.log(index);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
