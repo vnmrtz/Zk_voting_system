@@ -45,7 +45,7 @@ contract Votation is Ownable, MerkleTree {
         address _verifier,
         IHasher _hasher
     ) MerkleTree(MERKLE_LEVELS, _hasher) {
-        require(_startDate + MIN_DELAY < _endDate);
+        require(_startDate + MIN_DELAY < _endDate, "Votation time should be bigger than 2 hours!!");
         id = _id;
         name = _name;
         description = _description;
@@ -101,6 +101,7 @@ contract Votation is Ownable, MerkleTree {
 
         uint32 insertedIndex = _insert(_commitment);
         commitments[_commitment] = true;
+        whiteList[msg.sender] = false;
 
         emit SignUp(_commitment, insertedIndex, block.timestamp);
         return insertedIndex;
