@@ -1,17 +1,19 @@
-import { createCode, abi } from "./micmsponge_gencontract.mjs";
+import { mimcSpongecontract } from "circomlibjs";
 import hre from "hardhat";
-
 import buildMimcSponge from "./micmsponge.mjs";
-
 const SEED = "mimcsponge";
 
 async function main() {
   //####### Deploy hasher librabry ######
   await buildMimcSponge();
-  let provider = hre.ethers.getDefaultProvider("http://localhost:8545");
+  //let provider = hre.ethers.getDefaultProvider("http://localhost:8545");
   const [account, addr1] = await hre.ethers.getSigners();
   console.log(account);
-  const C = new hre.ethers.ContractFactory(abi, createCode(SEED, 220), account);
+  const C = new hre.ethers.ContractFactory(
+    mimcSpongecontract.abi,
+    mimcSpongecontract.createCode(SEED, 220),
+    account
+  );
   let mimc = await C.deploy();
   console.log(`Hasher library was deployed to ${mimc.address}`);
   console.log(
