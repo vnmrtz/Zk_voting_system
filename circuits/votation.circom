@@ -18,8 +18,12 @@ template CommitmentHasher() {
         commitmentHasher.in[i] <== nullifierBits.out[i];
         commitmentHasher.in[i + 248] <== secretBits.out[i];
     }
+    for(var i = 247; i >=0; i--){
+        log(nullifierBits.out[i]);
+    }
     commitment <== commitmentHasher.out[0];
     nullifierHash <== nullifierHasher.out[0];
+    log(nullifierHash);
 }
 // Verifies that commitment that corresponds to given secret and nullifier is included in the merkle tree of deposits
 template Withdraw(levels) {
@@ -30,6 +34,7 @@ template Withdraw(levels) {
     signal input pathElements[levels];
     signal input pathIndices[levels];
     component hasher = CommitmentHasher();
+    log(nullifier);
     hasher.nullifier <== nullifier;
     hasher.secret <== secret;
     hasher.nullifierHash === nullifierHash;

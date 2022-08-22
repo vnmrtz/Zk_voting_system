@@ -32,23 +32,26 @@ async function main() {
   pedersenAlg = await circomlib.buildPedersenHash();
   micmsponge = await circomlib.buildMimcSponge();
   pedersenHash = (data) => babyJub.unpackPoint(pedersenAlg.hash(data))[0];
-  let nullifier1 = Buffer.from("ae", "utf-8");
-  let secret1 = Buffer.from("j", "utf-8");
+  let nullifier1 = Buffer.from("5521312211235521312211235521312");
+  let secret1 = Buffer.from("5521312211235521312211235521313");
   const createdDeposit1 = createDeposit(nullifier1, secret1);
   //input.commitment = Array.from(createdDeposit1.commitment);
-  input.nullifier = createdDeposit1.nullifier;
-  input.nullifierHash = Array.from(createdDeposit1.nullifierHash);
-  input.secret = createdDeposit1.secret;
+  input.nullifier = nullifier1.toString();
+  input.nullifierHash = Array.from(createdDeposit1.nullifierHash).join("");
+  input.secret = secret1.toString();
 
-  let nullifier2 = Buffer.from("juju", "utf-8");
-  let secret2 = Buffer.from("jeee", "utf-8");
+  let nullifier2 = Buffer.from("5521312211235521312211235521322", "utf-8");
+  let secret2 = Buffer.from("5521312211235521312211235521212", "utf-8");
   const createdDeposit2 = createDeposit(nullifier2, secret2);
 
   let hasher = new MimcSpongeHasher();
   //Array.from(createdDeposit.commitment.values()
   const tree = new merkleTree(
     MERKLE_TREE_HEIGHT,
-    [createdDeposit1.commitment, createdDeposit2.commitment],
+    [
+      Array.from(createdDeposit1.commitment).join(""),
+      Array.from(createdDeposit2.commitment).join(""),
+    ],
     undefined,
     undefined,
     hasher
@@ -58,8 +61,8 @@ async function main() {
   //commitment that was inserted in the tree (createdDeposit1.commmitment, that has an index 0 inside the tree)
   const { root, path_elements, path_index } = await tree.path(0);
   input.root = root;
-  input.path_elements = path_elements;
-  input.path_index = path_index;
+  input.pathElements = path_elements;
+  input.pathIndices = path_index;
   console.log(input);
   fs.writeFileSync("./input.json", JSON.stringify(input));
 }
