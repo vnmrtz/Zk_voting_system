@@ -1,5 +1,4 @@
 pragma solidity ^0.8.0;
-import "@openzeppelin/contracts/utils/Strings.sol";
 interface IHasher {
     function MiMCSponge(
         uint256 in_xL,
@@ -17,8 +16,6 @@ contract MerkleTree {
 
     uint32 public levels;
 
-    // the following variables are made public for easier testing and debugging and
-    // are not supposed to be accessed in regular code
     bytes32[] public filledSubtrees;
     bytes32[] public zeros;
     uint32 public nextIndex = 0;
@@ -53,7 +50,7 @@ contract MerkleTree {
     ) public pure returns (bytes32) {
         require(
             uint256(_left) < FIELD_SIZE,
-           Strings.toString(uint256(_left))
+           "_left should be inside the field"
         );
         require(
             uint256(_right) < FIELD_SIZE,
@@ -71,7 +68,7 @@ contract MerkleTree {
         uint32 currentIndex = nextIndex;
         require(
             currentIndex != uint32(2)**levels,
-            "Merkle tree is full. No more leafs can be added"
+            "Merkle tree is full."
         );
         nextIndex += 1;
         bytes32 currentLevelHash = _leaf;

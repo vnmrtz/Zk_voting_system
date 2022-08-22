@@ -29,7 +29,16 @@ async function main() {
 
   console.log(`Verifier contract deployed to ${verifier.address}`);
 
-  //####### Deploy Votation Contract #######
+  const VotingFactory = await hre.ethers.getContractFactory("VotingFactory");   
+  const votingFactory = await upgrades.deployProxy(VotingFactory, [verifier.address, mimc.address], {
+    initializer: "initialize",
+  }); 
+
+  console.log("VotingFactory deployed to:", votingFactory.address);
+
+
+
+  /* //####### Deploy Votation Contract #######
   const Votation = await hre.ethers.getContractFactory("Votation");
   const votationContract = await Votation.deploy(
     1,
@@ -46,7 +55,7 @@ async function main() {
       gasLimit: 30000000,
     }
   );
-  console.log(`Votation Contract was deployed to ${votationContract.address}`);
+  console.log(`Votation Contract was deployed to ${votationContract.address}`); */
 }
 
 // We recommend this pattern to be able to use async/await everywhere

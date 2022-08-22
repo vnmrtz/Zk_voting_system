@@ -17,7 +17,7 @@ contract Votation is Ownable, MerkleTree {
     string public description;
     string[] public choices;
     uint256 public choiceNumber;
-
+    address public host;
     address public verifier;
 
     mapping(uint256 => uint256) votes;
@@ -41,11 +41,11 @@ contract Votation is Ownable, MerkleTree {
         address[] memory _whitelist,
         uint256 _startDate,
         uint256 _endDate,
-        address _admin,
+        address _host,
         address _verifier,
         IHasher _hasher
     ) MerkleTree(MERKLE_LEVELS, _hasher) {
-        require(_startDate + MIN_DELAY < _endDate, "Votation time should be bigger than 2 hours!!");
+        require(_startDate + MIN_DELAY < _endDate, "Votation delay error");
         id = _id;
         name = _name;
         description = _description;
@@ -54,14 +54,11 @@ contract Votation is Ownable, MerkleTree {
         startDate = _startDate;
         endDate = _endDate;
         verifier = _verifier;
+        host = _host;
 
         uint256 length = _whitelist.length;
         for (uint256 i = 0; i < length; i++) {
             whiteList[_whitelist[i]] = true;
-        }
-
-        if (_admin != address(0)) {
-            transferOwnership(_admin);
         }
     }
 
@@ -71,10 +68,6 @@ contract Votation is Ownable, MerkleTree {
         uint256 timestamp
     );
     event Vote(address voter, bytes32 nullifierHash);
-
-    function addMember(address _user) public onlyOwner {
-        whiteList[_user] = true;
-    }
 
     function results(uint256 _choice) public view returns (uint256) {
         return votes[_choice];
@@ -95,9 +88,9 @@ contract Votation is Ownable, MerkleTree {
     {
         require(
             !commitments[_commitment],
-            "The commitment has been submitted!!"
+            "Commitment already submitted"
         );
-        require(block.timestamp < startDate, "Votation has already started!!");
+        require(block.timestamp < startDate, "Votation has started");
 
         uint32 insertedIndex = _insert(_commitment);
         commitments[_commitment] = true;
@@ -114,12 +107,12 @@ contract Votation is Ownable, MerkleTree {
     ) external {
         require(
             block.timestamp < endDate && block.timestamp >= startDate,
-            "Votation has not started yet"
+            "Votation not started"
         );
         require(_choice >= 1 && _choice <= choices.length);
         require(
             !nullifierHashes[_nullifierHash],
-            "Your vote has already been submitted"
+            "Vote already submitted"
         );
         require(
             IVerifier(verifier).verifyProof(
