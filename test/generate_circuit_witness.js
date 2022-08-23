@@ -3,6 +3,9 @@ const fs = require("fs");
 const merkleTree = require("../lib/MerkleTree");
 const MERKLE_TREE_HEIGHT = 15;
 const bigInt = require("big-integer");
+const ffjavascript = require("ffjavascript");
+const beBuff2int = ffjavascript.utils.beBuff2int;
+const stringifyBigInts = ffjavascript.utils.stringifyBigInts;
 
 class MimcSpongeHasher {
   hash(level, left, right) {
@@ -27,6 +30,11 @@ function createDeposit(nullifier, secret) {
   return deposit;
 }
 
+const F = new ffjavascript.ZqField(
+  ffjavascript.Scalar.fromString(
+    "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+  )
+);
 async function main() {
   babyJub = await circomlib.buildBabyjub();
   pedersenAlg = await circomlib.buildPedersenHash();
@@ -37,8 +45,11 @@ async function main() {
   const createdDeposit1 = createDeposit(nullifier1, secret1);
   //input.commitment = Array.from(createdDeposit1.commitment);
   input.nullifier = nullifier1.toString();
-  input.nullifierHash = Array.from(createdDeposit1.nullifierHash).join("");
+  input.nullifierHash = stringifyBigInts(
+    F.fromRprLEM(createdDeposit1.nullifierHash)
+  );
   input.secret = secret1.toString();
+  console.log(input.nullifierHash);
 
   let nullifier2 = Buffer.from("5521312211235521312211235521322", "utf-8");
   let secret2 = Buffer.from("5521312211235521312211235521212", "utf-8");

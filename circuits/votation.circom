@@ -14,12 +14,10 @@ template CommitmentHasher() {
     nullifierBits.in <== nullifier;
     secretBits.in <== secret;
     for (var i = 0; i < 248; i++) {
+        log(nullifierBits.out[i]);
         nullifierHasher.in[i] <== nullifierBits.out[i];
         commitmentHasher.in[i] <== nullifierBits.out[i];
         commitmentHasher.in[i + 248] <== secretBits.out[i];
-    }
-    for(var i = 247; i >=0; i--){
-        log(nullifierBits.out[i]);
     }
     commitment <== commitmentHasher.out[0];
     nullifierHash <== nullifierHasher.out[0];
