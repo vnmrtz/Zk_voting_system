@@ -73,6 +73,10 @@ contract Votation is Ownable, MerkleTree {
         return votes[_choice];
     }
 
+    function choicesList() public view returns (string[] memory) {
+        return choices;
+    }
+
     function hasEnded() public view returns (bool) {
         return block.timestamp > endDate;
     }
