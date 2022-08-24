@@ -1,3 +1,5 @@
+pragma circom 2.0.0;
+
 include "../node_modules/circomlib/circuits/mimcsponge.circom";
 
 // Computes MiMC([left, right])
@@ -46,6 +48,5 @@ template MerkleTreeChecker(levels) {
         hashers[i].left <== selectors[i].out[0];
         hashers[i].right <== selectors[i].out[1];
     }
-
     root === hashers[levels - 1].hash;
 }
