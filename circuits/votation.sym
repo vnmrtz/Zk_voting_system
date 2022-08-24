@@ -1,5 +1,5 @@
-1,1,19,main.root
-2,2,19,main.nullifierHash
+1,1,19,main.nullifierHash
+2,2,19,main.top
 3,3,19,main.nullifier
 4,4,19,main.secret
 5,5,19,main.pathElements[0]

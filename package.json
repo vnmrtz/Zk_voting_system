@@ -8,7 +8,8 @@
     "typescript": "^4.7.4"
   },
   "scripts": {
-    "witness": "node circuits/votation_js/generate_witness.js circuits/votation_js/votation.wasm ./input.json ./witness.wtn"
+    "witness": "node circuits/votation_js/generate_witness.js circuits/votation_js/votation.wasm ./input.json ./witness.wtn",
+    "recompile": "circom ./circuits/votation.circom --r1cs --wasm --sym --c  -o ./circuits"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",

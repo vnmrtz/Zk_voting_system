@@ -61,8 +61,8 @@ async function main() {
   const tree = new merkleTree(
     MERKLE_TREE_HEIGHT,
     [
-      Array.from(createdDeposit1.commitment).join(""),
-      Array.from(createdDeposit2.commitment).join(""),
+      stringifyBigInts(F.fromRprLEM(createdDeposit1.commitment)),
+      stringifyBigInts(F.fromRprLEM(createdDeposit2.commitment)),
     ],
     undefined,
     undefined,

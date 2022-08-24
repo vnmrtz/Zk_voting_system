@@ -4,8 +4,7 @@ const merkleTree = require("../lib/MerkleTree");
 const MERKLE_TREE_HEIGHT = 15;
 const bigInt = require("big-integer");
 const ffjavascript = require("ffjavascript");
-const leInt2Buff = ffjavascript.utils.leInt2Buff;
-const leBuff2int = ffjavascript.utils.leBuff2int;
+const utils = ffjavascript.utils;
 const stringifyBigInts = ffjavascript.utils.stringifyBigInts;
 
 class MimcSpongeHasher {
@@ -25,24 +24,12 @@ let input = {};
 
 function createDeposit(nullifier, secret) {
   let deposit = { nullifier, secret };
-  deposit.preimage = Buffer.concat([
-    leInt2Buff(deposit.nullifier),
-    leInt2Buff(deposit.secret),
-  ]);
+  deposit.preimage = Buffer.concat([deposit.nullifier, deposit.secret]);
   deposit.commitment = pedersenHash(deposit.preimage);
-  deposit.nullifierHash = pedersenHash(leInt2Buff(deposit.nullifier));
+  deposit.nullifierHash = pedersenHash(deposit.nullifier);
   return deposit;
 }
 
-// function buff2hex(buff) {
-//   function i2hex(i) {
-//     return ("0" + i.toString(16)).slice(-2);
-//   }
-//   return Array.from(buff).map(i2hex).join("");
-// }
-// const numberConverter = (number) => {
-//   return new ffjavascript.ZqField(ffjavascript.Scalar.fromString(number));
-// };
 const F = new ffjavascript.ZqField(
   ffjavascript.Scalar.fromString(
     "21888242871839275222246405745257275088548364400416034343698204186575808495617"
@@ -54,22 +41,19 @@ async function main() {
   micmsponge = await circomlib.buildMimcSponge();
   pedersenHash = (data) => babyJub.unpackPoint(pedersenAlg.hash(data))[0];
   let nullifier1 = Buffer.from("5521312211235521312211235521312");
-  nullifier1 = leBuff2int(nullifier1);
   let secret1 = Buffer.from("5521312211235521312211235521313");
-  secret1 = leBuff2int(secret1);
   const createdDeposit1 = createDeposit(nullifier1, secret1);
   //input.commitment = Array.from(createdDeposit1.commitment);
-  input.nullifier = nullifier1.toString();
+  input.nullifier = stringifyBigInts(utils.leBuff2int(nullifier1));
   input.nullifierHash = stringifyBigInts(
     F.fromRprLEM(createdDeposit1.nullifierHash)
   );
-  input.secret = secret1.toString();
   console.log(input.nullifierHash);
+  console.log(stringifyBigInts(utils.leBuff2int(createdDeposit1.nullifier)));
+  input.secret = stringifyBigInts(utils.leBuff2int(secret1));
 
   let nullifier2 = Buffer.from("5521312211235521312211235521322");
-  nullifier2 = leBuff2int(nullifier2);
   let secret2 = Buffer.from("5521312211235521312211235521212");
-  secret2 = leBuff2int(secret2);
   const createdDeposit2 = createDeposit(nullifier2, secret2);
 
   let hasher = new MimcSpongeHasher();
@@ -88,10 +72,11 @@ async function main() {
   //Now we are going to find the merkle tree proof that is computed for the 1st
   //commitment that was inserted in the tree (createdDeposit1.commmitment, that has an index 0 inside the tree)
   const { root, path_elements, path_index } = await tree.path(0);
-  input.root = root;
+  console.log(path_elements);
+  input.top = root;
   input.pathElements = path_elements;
   input.pathIndices = path_index;
-  console.log(input);
+  //console.log(input);
   fs.writeFileSync("./input.json", JSON.stringify(input));
 }
 
